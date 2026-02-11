@@ -21,13 +21,20 @@
 (defmethod board-columns ((board board))
 	   (array-dimensions (blocks board) 1))
 
-(defun isolate-groups ((board board) group-size)
-  (let* (found-groups
-	 (board-blocks (blocks-board)) ;; Real board 
-	 (temp-array (make-array (array-dimensions board-blocks))))
-    (replace temp-array (blocks board)) ;; Shallow copy array
-    (dotimes* (row (board-rows temp-array)
-		   column (board-columns temp-array))
-	      
-	      
-			   
+(defmethod isolate-groups ((board board) group-size)
+  ;; Duplicate the board
+  ;; Create a temp called queue
+  ;; Create a temp called group
+  ;; Create a temp called groups
+  ;; For each position p in the board
+  ;; If p has a cell (not nil) 
+  ;;    Move the cell to the group
+  ;;    Set the cell's location to NIL
+  ;;      Add the non NIL neighbors to the queue
+  ;;      if queue is not empty, pop off a new P
+  ;;      if the queue is empty and group is >= required sice
+  ;;         push group onto groups
+  ;;         exit to next position)
+  ;; Finally return groups
+  )
+             
