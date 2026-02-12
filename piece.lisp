@@ -10,6 +10,8 @@
 
 ;; Note, color2 is used for toggling next color
 ;; color1 is used for matching
+
+;; TODO this x y crap needs to become column row
 (defun make-block (x y color1 color2)
   (make-instance 'piece-block :x x
 			      :y y
