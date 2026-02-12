@@ -74,7 +74,8 @@ access beyond borders is allowed but ignored."
                   ;; Examine neighbors
                   (dolist (neighbor (get-neighbors board (y current) (x current) 8-way-p))
                     ;; Only consider neighbors of same color that haven't been visited
-                    (when (and (= (color1 neighbor) (color1 current))
+                    (when (and (typep neighbor 'piece-block)
+			       (= (color1 neighbor) (color1 current))
                                (null (aref painted (y neighbor) (x neighbor))))
                       (setf (aref painted (y neighbor) (x neighbor)) t)
                       (push neighbor queue)))))
