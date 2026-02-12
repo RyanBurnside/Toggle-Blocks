@@ -105,3 +105,22 @@ access beyond borders is allowed but ignored."
 		  (x block-piece))
 	    nil))))
       
+(defmethod compress-column-down ((board board) col)
+  "Takes a column number and pushes all pieces down to the bottom
+removing all gaps (nil)s."
+  ;; Collect only the solids in the column
+  (let ((solids (loop for row from 0 below (board-rows board)
+		      for value = (aref (blocks board) row col)
+		      when value
+			collect value
+		      do (setf (aref (blocks board) row col) nil))))
+    ;; Move from bottom up setting the caught values
+    (loop for value in (reverse solids)
+	  for row from (1- (board-rows board)) downto 0
+	  do (setf (x value) col
+		   (y value) row)
+	     (setf (aref (blocks board) row col) value))))
+
+(defmethod compress-blocks-down ((board board))
+  (dotimes (col (board-columns board))
+    (compress-column-down board col)))

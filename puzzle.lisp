@@ -50,7 +50,7 @@
     dummy))
 
 (defparameter *boards*
-  (loop repeat 4
+  (loop repeat 3
 	collect (make-dummy-board 12 5)))
 
 (defun draw-boards (x y list)
@@ -100,7 +100,11 @@
     (print (getf keyboard 'al::keycode))
     ;; Dummy function for visual testing of group removal process
     (dolist (b *boards*)
-      (delete-groups b 3))
+      (format t "Removing Groups.~%")
+      (delete-groups b 3)
+      (format t "Shifting down.~%")
+      (compress-blocks-down b))
+
     (setf (previous-key sys) (getf keyboard 'al::keycode))))
 
 (defun main ()
