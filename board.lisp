@@ -104,23 +104,35 @@ access beyond borders is allowed but ignored."
 		  (y block-piece)
 		  (x block-piece))
 	    nil))))
-      
+
+
+;; TODO monitor the row value change and return number of changes
 (defmethod compress-column-down ((board board) col)
   "Takes a column number and pushes all pieces down to the bottom
-removing all gaps (nil)s."
+removing all gaps (nil)s. Returns t if things shifted."
   ;; Collect only the solids in the column
   (let ((solids (loop for row from 0 below (board-rows board)
 		      for value = (aref (blocks board) row col)
 		      when value
 			collect value
-		      do (setf (aref (blocks board) row col) nil))))
+		      do (setf (aref (blocks board) row col) nil)))
+	moved-p)
+
     ;; Move from bottom up setting the caught values
     (loop for value in (reverse solids)
 	  for row from (1- (board-rows board)) downto 0
+	  when (/= (y value) row)
+	    do (setf moved-p t)
 	  do (setf (x value) col
 		   (y value) row)
-	     (setf (aref (blocks board) row col) value))))
+	     (setf (aref (blocks board) row col) value))
+    moved-p))
 
+;; TODO Return t if movement happened in the rows so it can be called until nil
 (defmethod compress-blocks-down ((board board))
-  (dotimes (col (board-columns board))
-    (compress-column-down board col)))
+  "Shifts all blocks down, returns t if something moved."
+  (let (moved-p)
+    (dotimes (col (board-columns board))
+      (when (compress-column-down board col)
+	(setf moved-p t)))
+    moved-p))

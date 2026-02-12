@@ -50,7 +50,7 @@
     dummy))
 
 (defparameter *boards*
-  (loop repeat 3
+  (loop repeat 4
 	collect (make-dummy-board 12 5)))
 
 (defun draw-boards (x y list)
@@ -98,13 +98,14 @@
 (defmethod al:key-down-handler ((sys window))
   (let ((keyboard (cffi:mem-ref (al:event sys) '(:struct al:keyboard-event))))
     (print (getf keyboard 'al::keycode))
-    ;; Dummy function for visual testing of group removal process
-    (dolist (b *boards*)
-      (format t "Removing Groups.~%")
-      (delete-groups b 3)
-      (format t "Shifting down.~%")
-      (compress-blocks-down b))
 
+    ;; Dummy function for visual testing of group removal process
+    (loop for done = t
+	  do (dolist (b *boards*)
+	       (delete-groups b 3)
+	       (when (compress-blocks-down b)
+		 (setf done nil)))
+	  until done)
     (setf (previous-key sys) (getf keyboard 'al::keycode))))
 
 (defun main ()
