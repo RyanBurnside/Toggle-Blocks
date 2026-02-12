@@ -1,4 +1,5 @@
 ;;;; package.lisp
 
 (defpackage #:puzzle
-  (:use #:cl))
+  (:use #:cl)
+  (:local-nicknames (#:a #:alexandria)))

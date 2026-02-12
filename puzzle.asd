@@ -6,7 +6,7 @@
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
-  :depends-on (#:cl-liballegro)
+  :depends-on (#:cl-liballegro #:alexandria)
   :components ((:file "package")
 	       (:file "algorithms")
 	       (:file "piece")

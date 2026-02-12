@@ -24,7 +24,13 @@
 (defmethod inside-board-p ((board board) row column)
   (and (<= 0 row (1- (board-rows board)))
        (<= 0 column (1- (board-columns board)))))
-       
+
+(defmacro with-board ((row-sym col-sym board) &body body)
+  (a:once-only (board)
+    `(dotimes (,row-sym (board-rows ,board))
+       (dotimes (,col-sym (board-columns ,board))
+	 ,@body))))
+
 (defmethod get-neighbors ((board board) row col &optional 8-way-p &aux results)
   "Return a list of neighbors of a cell. 4 way unless 8-way-p is T.
 access beyond borders is allowed but ignored."
@@ -49,40 +55,53 @@ access beyond borders is allowed but ignored."
   "Finds all contiguous groups of pieces on BOARD of at least GROUP-SIZE.
 8-WAY-P controls whether diagonal neighbors are considered."
 
-  (let* ((groups nil)
-         ;; Painted array keeps track of visited cells (boolean)
-         (painted (make-array (array-dimensions (blocks board))
-                              :initial-element nil)))
+  (let* (;; markedvisited array keeps track of visited cells (boolean)
+         (visited (make-array (array-dimensions (blocks board))
+                              :initial-element nil))
+	 groups ; Return result
+	 start-piece ; The "seed" per row/col iteration
+	 queue ; used in BFS
+	 group ; collects current matching piece-blocks
+	 current)
 
     ;; Scan the board
-    (dotimes (row (board-rows board))
-      (dotimes (column (board-columns board))
-        (let ((start-piece (aref (blocks board) row column)))
-          ;; Start a new group if piece exists and hasn't been visited
-          (when (and start-piece (null (aref painted row column)))
-            (let ((queue (list start-piece))
-                  (group nil))
-              
-              ;; Mark starting cell visited immediately
-              (setf (aref painted row column) t)
+    (with-board (row column board)
+      (setf start-piece (aref (blocks board) row column))
+      ;; Start a new group if piece exists and hasn't been visited
+      (when (and start-piece (null (aref visited row column)))
+	(setf queue (list start-piece)
+	      group nil)
+	
+	;; Mark starting cell visited immediately
+	(setf (aref visited row column) t)
+	
+	;; BFS loop (builds up group)
+	(loop while queue do
+	  (setf current (pop queue))
+	  (push current group)
+	  
+	  ;; Examine neighbors
+	  (dolist (neighbor (get-neighbors board (y current) (x current) 8-way-p))
+	    ;; Only consider neighbors of same color that haven't been visited
+	    (when (and (typep neighbor 'piece-block)
+		       (= (color1 neighbor) (color1 current))
+		       (null (aref visited (y neighbor) (x neighbor))))
+	      (setf (aref visited (y neighbor) (x neighbor)) t)
+	      (push neighbor queue))))
+	
+	;; Save group if it meets minimum size
+	(when (>= (length group) group-size)
+	  (push group groups))))
 
-              ;; BFS loop
-              (loop while queue do
-                (let ((current (pop queue)))
-                  (push current group)
+      ;; Return all valid groups
+      groups))
 
-                  ;; Examine neighbors
-                  (dolist (neighbor (get-neighbors board (y current) (x current) 8-way-p))
-                    ;; Only consider neighbors of same color that haven't been visited
-                    (when (and (typep neighbor 'piece-block)
-			       (= (color1 neighbor) (color1 current))
-                               (null (aref painted (y neighbor) (x neighbor))))
-                      (setf (aref painted (y neighbor) (x neighbor)) t)
-                      (push neighbor queue)))))
-
-              ;; Save group if it meets minimum size
-              (when (>= (length group) group-size)
-                (push group groups)))))))
-
-    ;; Return all valid groups
-    groups))
+(defmethod delete-groups ((board board) size)
+  "Deletes the current groups, doesn't move pieces down."
+  (dolist (group (isolate-groups board size))
+    (dolist (block-piece group)
+      (setf (aref (blocks board)
+		  (y block-piece)
+		  (x block-piece))
+	    nil))))
+      

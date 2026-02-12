@@ -98,10 +98,9 @@
 (defmethod al:key-down-handler ((sys window))
   (let ((keyboard (cffi:mem-ref (al:event sys) '(:struct al:keyboard-event))))
     (print (getf keyboard 'al::keycode))
+    ;; Dummy function for visual testing of group removal process
     (dolist (b *boards*)
-      (dolist (g (isolate-groups b 3))
-	(dolist (i g)
-	  (setf (aref (blocks b) (y i) (x i)) nil))))
+      (delete-groups b 3))
     (setf (previous-key sys) (getf keyboard 'al::keycode))))
 
 (defun main ()
