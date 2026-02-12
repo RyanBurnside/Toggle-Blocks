@@ -8,7 +8,7 @@
   :serial t
   :depends-on (#:cl-liballegro #:alexandria)
   :components ((:file "package")
-	       (:file "algorithms")
-	       (:file "piece")
-	       (:file "board")
+               (:file "algorithms")
+               (:file "piece")
+               (:file "board")
                (:file "puzzle")))

@@ -14,15 +14,15 @@
 ;; TODO this x y crap needs to become column row
 (defun make-block (x y color1 color2)
   (make-instance 'piece-block :x x
-			      :y y
-			      :color1 color1
-			      :color2 color2))
+                              :y y
+                              :color1 color1
+                              :color2 color2))
 
 (defun make-random-block (x y color-list)
   (make-block x
-	      y
-	      (nth (random (length color-list)) color-list)
-	      (nth (random (length color-list)) color-list)))
+              y
+              (nth (random (length color-list)) color-list)
+              (nth (random (length color-list)) color-list)))
    
 (defclass piece (coord)
   ((x :initarg :x :initform 0 :accessor x)
@@ -31,12 +31,12 @@
 
 (defun make-random-3piece (x y color-list)
   (let ((temp (make-instance 'piece :x x :y y))
-	(offsets (if (zerop (random 2))
-		     `((-1 . 0) (0 . 0) (1 .  0)) ; hori line
-		     `((0 . -1) (0 . 0) (1 . 0))))) ; L shape
+        (offsets (if (zerop (random 2))
+                     `((-1 . 0) (0 . 0) (1 .  0)) ; hori line
+                     `((0 . -1) (0 . 0) (1 . 0))))) ; L shape
     (loop for (xx . yy) in offsets
-	  do (push (make-random-block (+ xx x) (+ yy y) color-list)
-		   (blocks temp)))
+          do (push (make-random-block (+ xx x) (+ yy y) color-list)
+                   (blocks temp)))
     temp))
 
       

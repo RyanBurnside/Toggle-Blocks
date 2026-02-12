@@ -12,18 +12,18 @@
 
 (defun draw-block (x y block &key (show-color2 t) (show-inverted nil))
   (let* ((new-x (+ x (* (x block) 32)))
-	 (new-y (+ y (* (y block) 32)))
-	 (col1 (if show-inverted
-		   (color2 block)
-		   (color1 block)))
-	 (col2 (if show-inverted
-		   (color1 block)
-		   (color2 block)))
-	 (offset1 (* col1 32)) ; Subimage offsets
-	 (offset2 (* col2 32)))
+         (new-y (+ y (* (y block) 32)))
+         (col1 (if show-inverted
+                   (color2 block)
+                   (color1 block)))
+         (col2 (if show-inverted
+                   (color1 block)
+                   (color2 block)))
+         (offset1 (* col1 32)) ; Subimage offsets
+         (offset2 (* col2 32)))
     (al:draw-bitmap-region *sprites* offset1 0 32 32 new-x new-y nil)
     (when show-color2
-	(al:draw-bitmap-region *sprites* offset2 32 32 32 new-x new-y nil))))
+        (al:draw-bitmap-region *sprites* offset2 32 32 32 new-x new-y nil))))
 
 (defun draw-piece (piece &key (reversed nil))
   (dolist (b (blocks piece))
@@ -31,34 +31,34 @@
 
 (defun draw-board (x y board)
   (al:draw-filled-rectangle x
-			    y
-			    (+ x (1- (* (width board) 32)))
-			    (+ y (1- (* (height board) 32)))
-			    (al:map-rgb 64 0 128))
+                            y
+                            (+ x (1- (* (width board) 32)))
+                            (+ y (1- (* (height board) 32)))
+                            (al:map-rgb 64 0 128))
 
   (dotimes* (yy (height board)
-	     xx (width board))
+             xx (width board))
     (when (aref (blocks board) yy xx)
       (draw-block x y (aref (blocks board) yy xx)
-		  :show-color2 nil))))
-	
+                  :show-color2 nil))))
+        
 (defun make-dummy-board (rows columns)
   (let ((dummy (make-board rows columns)))
     (dotimes* (c columns r rows)
       (setf (aref (blocks dummy) r c)
-	    (make-random-block c r *colors*)))
+            (make-random-block c r *colors*)))
     dummy))
 
 (defparameter *boards*
   (loop repeat 4
-	collect (make-dummy-board 12 5)))
+        collect (make-dummy-board 12 5)))
 
 (defun draw-boards (x y list)
   (loop with origin = x
-	for b in *boards*
-	for adjusted-width = (* (1+ (width b)) 32)
-	do (draw-board origin y b)
-	   (incf origin adjusted-width)))
+        for b in *boards*
+        for adjusted-width = (* (1+ (width b)) 32)
+        do (draw-board origin y b)
+           (incf origin adjusted-width)))
 
 
 ;; Creates a 800x600 resizable OpenGL display titled "Simple"
@@ -101,11 +101,11 @@
 
     ;; Dummy function for visual testing of group removal process
     (loop for done = t
-	  do (dolist (b *boards*)
-	       (delete-groups b 3)
-	       (when (compress-blocks-down b)
-		 (setf done nil)))
-	  until done)
+          do (dolist (b *boards*)
+               (delete-groups b 3)
+               (when (compress-blocks-down b)
+                 (setf done nil)))
+          until done)
     (setf (previous-key sys) (getf keyboard 'al::keycode))))
 
 (defun main ()
