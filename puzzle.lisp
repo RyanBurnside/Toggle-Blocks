@@ -50,7 +50,7 @@
     dummy))
 
 (defparameter *boards*
-  (loop repeat 1
+  (loop repeat 4
 	collect (make-dummy-board 12 5)))
 
 (defun draw-boards (x y list)
@@ -98,6 +98,10 @@
 (defmethod al:key-down-handler ((sys window))
   (let ((keyboard (cffi:mem-ref (al:event sys) '(:struct al:keyboard-event))))
     (print (getf keyboard 'al::keycode))
+    (dolist (b *boards*)
+      (dolist (g (isolate-groups b 3))
+	(dolist (i g)
+	  (setf (aref (blocks b) (y i) (x i)) nil))))
     (setf (previous-key sys) (getf keyboard 'al::keycode))))
 
 (defun main ()

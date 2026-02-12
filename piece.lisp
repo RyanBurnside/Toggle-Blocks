@@ -8,6 +8,8 @@
   ((color1 :initarg :color1 :accessor color1)
    (color2 :initarg :color2 :accessor color2)))
 
+;; Note, color2 is used for toggling next color
+;; color1 is used for matching
 (defun make-block (x y color1 color2)
   (make-instance 'piece-block :x x
 			      :y y
