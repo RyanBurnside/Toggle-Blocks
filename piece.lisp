@@ -39,6 +39,3 @@
                    (blocks temp)))
     temp))
 
-      
-      
-  

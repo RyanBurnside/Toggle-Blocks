@@ -1,7 +1,5 @@
 (in-package #:puzzle)
 
-;; Note, when setfing the blocks you need to (setf (aref (blocks <foo>) Y X) <value>)
-
 (defclass board ()
   ((height :initarg :height :initform 13 :accessor height)
    (width :initarg :width :initform 7 :accessor width)
@@ -21,11 +19,17 @@
 (defmethod board-columns ((board board))
   (second (array-dimensions (blocks board))))
 
+(defmethod piece-at ((board board) row col)
+  (aref (blocks board) row col))
+
+(defmethod set-at ((board board) row col value)
+  (seta (blocks board) (row col) value))
+
 (defmethod inside-board-p ((board board) row column)
   (and (<= 0 row (1- (board-rows board)))
        (<= 0 column (1- (board-columns board)))))
 
-(defmacro with-board ((row-sym col-sym board) &body body)
+(defmacro do-board ((row-sym col-sym board) &body body)
   (a:once-only (board)
     `(dotimes (,row-sym (board-rows ,board))
        (dotimes (,col-sym (board-columns ,board))
@@ -38,7 +42,7 @@ access beyond borders is allowed but ignored."
            (let ((new-row (+ r row))
                  (new-column (+ c col)))
              (when (inside-board-p board new-row new-column)
-               (push (aref (blocks board) new-row new-column)
+               (push (piece-at board new-row new-column)
                      results)))))
     (maybe-collect  1  0)
     (maybe-collect -1  0)
@@ -65,15 +69,15 @@ access beyond borders is allowed but ignored."
          current)
 
     ;; Scan the board
-    (with-board (row column board)
-      (setf start-piece (aref (blocks board) row column))
+    (do-board (row column board)
+      (setf start-piece (piece-at board row column))
       ;; Start a new group if piece exists and hasn't been visited
       (when (and start-piece (null (aref visited row column)))
         (setf queue (list start-piece)
               group nil)
 
         ;; Mark starting cell visited immediately
-        (setf (aref visited row column) t)
+        (seta visited (row column) t)
 
         ;; BFS loop (builds up group)
         (loop while queue do
@@ -86,7 +90,7 @@ access beyond borders is allowed but ignored."
             (when (and (typep neighbor 'piece-block)
                        (= (color1 neighbor) (color1 current))
                        (null (aref visited (y neighbor) (x neighbor))))
-              (setf (aref visited (y neighbor) (x neighbor)) t)
+              (seta visited ((y neighbor) (x neighbor)) t)
               (push neighbor queue))))
 
         ;; Save group if it meets minimum size
@@ -96,13 +100,14 @@ access beyond borders is allowed but ignored."
       ;; Return all valid groups
       groups))
 
+;; TODO make this set-piece-f at end
 (defmethod delete-groups ((board board) size)
   "Deletes the current groups, doesn't move pieces down."
   (dolist (group (isolate-groups board size))
     (dolist (block-piece group)
-      (setf (aref (blocks board)
-                  (y block-piece)
-                  (x block-piece))
+      (set-at board
+              (y block-piece)
+               (x block-piece)
             nil))))
 
 
@@ -112,10 +117,10 @@ access beyond borders is allowed but ignored."
 removing all gaps (nil)s. Returns t if things shifted."
   ;; Collect only the solids in the column
   (let ((solids (loop for row from 0 below (board-rows board)
-                      for value = (aref (blocks board) row col)
+                      for value = (piece-at board row col)
                       when value
                         collect value
-                      do (setf (aref (blocks board) row col) nil)))
+                      do (set-at board row col nil)))
         moved-p)
 
     ;; Move from bottom up setting the caught values
@@ -125,7 +130,7 @@ removing all gaps (nil)s. Returns t if things shifted."
             do (setf moved-p t)
           do (setf (x value) col
                    (y value) row)
-             (setf (aref (blocks board) row col) value))
+             (set-at board row col value))
     moved-p))
 
 ;; TODO Return t if movement happened in the rows so it can be called until nil

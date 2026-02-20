@@ -36,17 +36,15 @@
                             (+ y (1- (* (height board) 32)))
                             (al:map-rgb 64 0 128))
 
-  (dotimes* (yy (height board)
-             xx (width board))
-    (when (aref (blocks board) yy xx)
-      (draw-block x y (aref (blocks board) yy xx)
+  (do-board (yy xx board)
+    (when (piece-at board yy xx)
+      (draw-block x y (piece-at board yy xx)
                   :show-color2 nil))))
         
 (defun make-dummy-board (rows columns)
   (let ((dummy (make-board rows columns)))
     (dotimes* (c columns r rows)
-      (setf (aref (blocks dummy) r c)
-            (make-random-block c r *colors*)))
+      (set-at dummy r c (make-random-block c r *colors*)))
     dummy))
 
 (defparameter *boards*
