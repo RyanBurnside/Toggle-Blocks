@@ -37,3 +37,4 @@
                (t (bounce-segment u (/ 2.625 d1) 0.984375d0)))))
         (+ (* (- 1.0d0 bounce-factor) p1)
            (* bounce-factor p2))))))
+

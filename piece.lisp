@@ -1,8 +1,12 @@
 (in-package #:puzzle)
 
 (defclass coord () ; coord mixin
-  ((x :initarg :x :initform 0 :accessor x)
-   (y :initarg :y :initform 0 :accessor y)))
+  ((x :initarg :x :initarg :column
+      :initform 0
+      :accessor x :accessor column)
+   (y :initarg :y :initarg :row
+      :initform 0
+      :accessor y :accessor row)))
 
 (defclass piece-block (coord)
   ((color1 :initarg :color1 :accessor color1)
@@ -23,11 +27,9 @@
               y
               (nth (random (length color-list)) color-list)
               (nth (random (length color-list)) color-list)))
-   
+
 (defclass piece (coord)
-  ((x :initarg :x :initform 0 :accessor x)
-   (y :initarg :y :initform 0 :accessor y)
-   (blocks :initarg :blocks :initform nil :accessor blocks)))
+  ((blocks :initarg :blocks :initform nil :accessor blocks)))
 
 (defun make-random-3piece (x y color-list)
   (let ((temp (make-instance 'piece :x x :y y))
@@ -38,4 +40,3 @@
           do (push (make-random-block (+ xx x) (+ yy y) color-list)
                    (blocks temp)))
     temp))
-

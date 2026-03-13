@@ -4,7 +4,6 @@
 ;;;; they provide movement from start to finish
 ;;;; Start and end may be a coordinate list of any number
 
-
 (defclass animation ()
   ((start :initarg :start :initform (list 0 0) :accessor start)
    (end :initarg :end :initform (list 0 0) :accessor end)

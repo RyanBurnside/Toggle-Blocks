@@ -4,7 +4,15 @@
   ((height :initarg :height :initform 13 :accessor height)
    (width :initarg :width :initform 7 :accessor width)
    (current-piece :initarg :current-piece :initform nil :accessor current-piece)
-   (blocks :initarg :blocks :initform (make-array `(1 1)) :accessor blocks)))
+   (blocks :initarg :blocks :initform (make-array `(1 1)) :accessor blocks)
+   (animations :initform nil :accessor animations)
+   (state :initform 'starting)))
+
+;; Group Extraction
+;; Group Removal
+;;   -> Destruction animations/sound loop
+;; Shift Down (save current board, shift, form interpolations)
+;;   -> Interpolation animations/sound loop
 
 (defun make-board (rows columns)
   (make-instance 'board
@@ -35,29 +43,18 @@
        (dotimes (,col-sym (board-columns ,board))
          ,@body))))
 
-(defmethod get-neighbors ((board board) row col &optional 8-way-p &aux results)
-  "Return a list of neighbors of a cell. 4 way unless 8-way-p is T.
+(defmethod get-neighbors ((board board) row col)
+  "Return a list of neighbors of a cell.
 access beyond borders is allowed but ignored."
-  (flet ((maybe-collect (r c)
-           (let ((new-row (+ r row))
-                 (new-column (+ c col)))
-             (when (inside-board-p board new-row new-column)
-               (push (piece-at board new-row new-column)
-                     results)))))
-    (maybe-collect  1  0)
-    (maybe-collect -1  0)
-    (maybe-collect  0  1)
-    (maybe-collect  0 -1)
-    (when 8-way-p
-      (maybe-collect -1 -1)
-      (maybe-collect  1 -1)
-      (maybe-collect  1  1) 
-      (maybe-collect -1  1))
-    results))
+  (loop with adjacent = '((1 0) (-1 0) (0 1) (0 -1))
+        for (r c) in adjacent
+        for new-row = (+ r row)
+        for new-column = (+ c col)
+        when (inside-board-p board new-row new-column)
+          collect (piece-at board new-row new-column)))
 
-(defmethod isolate-groups ((board board) group-size &optional 8-way-p)
-  "Finds all contiguous groups of pieces on BOARD of at least GROUP-SIZE.
-8-WAY-P controls whether diagonal neighbors are considered."
+(defmethod isolate-groups ((board board) group-size)
+  "Finds all contiguous groups of pieces on BOARD of at least GROUP-SIZE."
 
   (let* (;; markedvisited array keeps track of visited cells (boolean)
          (visited (make-array (array-dimensions (blocks board))
@@ -85,7 +82,7 @@ access beyond borders is allowed but ignored."
           (push current group)
 
           ;; Examine neighbors
-          (dolist (neighbor (get-neighbors board (y current) (x current) 8-way-p))
+          (dolist (neighbor (get-neighbors board (y current) (x current)))
             ;; Only consider neighbors of same color that haven't been visited
             (when (and (typep neighbor 'piece-block)
                        (= (color1 neighbor) (color1 current))
@@ -97,8 +94,8 @@ access beyond borders is allowed but ignored."
         (when (>= (length group) group-size)
           (push group groups))))
 
-      ;; Return all valid groups
-      groups))
+    ;; Return all valid groups
+    groups))
 
 ;; TODO make this set-piece-f at end
 (defmethod delete-groups ((board board) size)
@@ -107,15 +104,17 @@ access beyond borders is allowed but ignored."
     (dolist (block-piece group)
       (set-at board
               (y block-piece)
-               (x block-piece)
-            nil))))
+              (x block-piece)
+              nil))))
 
 
-;; TODO monitor the row value change and return number of changes
 (defmethod compress-column-down ((board board) col)
   "Takes a column number and pushes all pieces down to the bottom
-removing all gaps (nil)s. Returns t if things shifted."
-  ;; Collect only the solids in the column
+removing all gaps (nil)s. Returns t if things shifted. this function also
+pushes animations into the board's animations slot. Block animations are row, column"
+  ;; Algorithm
+  ;; Collect pieces while clear position (column eventually gets blanked)
+
   (let ((solids (loop for row from 0 below (board-rows board)
                       for value = (piece-at board row col)
                       when value
@@ -123,14 +122,19 @@ removing all gaps (nil)s. Returns t if things shifted."
                       do (set-at board row col nil)))
         moved-p)
 
-    ;; Move from bottom up setting the caught values
-    (loop for value in (reverse solids)
+    ;; Move from bottom up setting the piece values
+    (loop for piece in (reverse solids)
           for row from (1- (board-rows board)) downto 0
-          when (/= (y value) row)
+          when (/= (y piece) row)
             do (setf moved-p t)
-          do (setf (x value) col
-                   (y value) row)
-             (set-at board row col value))
+          do ; Push new animation here
+             (push (make-block-animation piece
+                                         `(,(row piece) ,col)
+                                         `(,row ,col)
+                                         10)
+                   (animations board))
+             (setf (y piece) row)
+             (set-at board row col piece))
     moved-p))
 
 ;; TODO Return t if movement happened in the rows so it can be called until nil
