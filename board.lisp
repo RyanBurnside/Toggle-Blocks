@@ -56,6 +56,11 @@ access beyond borders is allowed but ignored."
 (defmethod isolate-groups ((board board) group-size)
   "Finds all contiguous groups of pieces on BOARD of at least GROUP-SIZE."
 
+  (do-board (row col board)
+    (let ((val (piece-at board row col)))
+      (when val
+        (setf (marked val) nil))))
+
   (let* (;; markedvisited array keeps track of visited cells (boolean)
          (visited (make-array (array-dimensions (blocks board))
                               :initial-element nil))
@@ -95,6 +100,9 @@ access beyond borders is allowed but ignored."
           (push group groups))))
 
     ;; Return all valid groups
+    (dolist (g groups)
+      (dolist (p g)
+        (setf (marked p) t)))
     groups))
 
 ;; TODO make this set-piece-f at end

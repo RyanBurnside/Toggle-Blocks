@@ -39,7 +39,13 @@
                        (color1 block)
                        (color2 block)
                        :show-color2 show-color2
-                       :show-inverted show-inverted)))
+                       :show-inverted show-inverted)
+    (when (marked block)
+      (al:draw-rounded-rectangle (+ new-x 2) (+ new-y 2)
+                                 (+ new-x 30) (+ new-y 30)
+                                 8 8
+                                 (al:map-rgb 255 255 255)
+                                 2))))
 
 (defun draw-piece (piece &key (reversed nil))
   (dolist (b (blocks piece))
@@ -95,7 +101,9 @@
   (setf *sprites* (al:load-bitmap "./sprites.png")))
 
 (defmethod al:update ((sys window))
-  (+ 1 1))
+  ;; TODO this might be slow to do per frame
+  (dolist (b *boards*)
+    (isolate-groups b 3)))
 
 (defmethod al:render ((sys window))
   (al:clear-to-color (al:map-rgb 0 0 0))
@@ -109,13 +117,22 @@
   (let ((keyboard (cffi:mem-ref (al:event sys) '(:struct al:keyboard-event))))
     (print (getf keyboard 'al::keycode))
 
+    (dolist (b *boards*)
+      (case (getf keyboard 'al::keycode)
+        (:enter
+         (format *standard-output* "Board ~a: Deleted ~a groups!~%" b (length (isolate-groups b 3)))
+         (delete-groups b 3)
+         (compress-blocks-down b))))
+
     ;; Dummy function for visual testing of group removal process
-    (loop for done = t
-          do (dolist (b *boards*)
-               (delete-groups b 3)
-               (when (compress-blocks-down b)
-                 (setf done nil)))
-          until done)
+    ;; (loop for done = t
+    ;;       do (dolist (b *boards*)
+    ;;            (delete-groups b 3)
+    ;;            (when (compress-blocks-down b)
+    ;;              (setf done nil)))
+    ;;       until done)
+
+
     (setf (previous-key sys) (getf keyboard 'al::keycode))))
 
 

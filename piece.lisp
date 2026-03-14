@@ -8,9 +8,19 @@
       :initform 0
       :accessor y :accessor row)))
 
+(defmethod move ((c coord) &key row column x y coord)
+  (when row (setf (row c) row))
+  (when column (setf (column c) column))
+  (when x (setf (x c) x))
+  (when y (setf (y c) y))
+  (when coord
+    (setf (row c) (row coord)
+          (column c) (column coord))))
+
 (defclass piece-block (coord)
   ((color1 :initarg :color1 :accessor color1)
-   (color2 :initarg :color2 :accessor color2)))
+   (color2 :initarg :color2 :accessor color2)
+   (marked :initform nil :accessor marked)))
 
 ;; Note, color2 is used for toggling next color
 ;; color1 is used for matching
